@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "incentive-sdk"
+version = "1.0.0"
+description = "Programmable USDC reward SDK for incentivizing user behavior"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { file = "LICENSE" }
+authors = [
+  { name = "Your Name", email = "you@example.com" }
+]
+dependencies = [
+  "requests>=2.26.0"
+]
+
+[tool.setuptools.packages.find]
+where = ["incentive"]
+include = ["incentive*"]
