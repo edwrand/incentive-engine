@@ -1,3 +1,5 @@
+# utils.py
+
 def validate_event_payload(event: str, user_id: str, amount: float) -> None:
     if not event or not isinstance(event, str):
         raise ValueError("Invalid event name. Must be a non-empty string.")
