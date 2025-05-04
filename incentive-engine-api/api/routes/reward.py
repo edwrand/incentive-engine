@@ -1,23 +1,59 @@
-# incentive-engine-api/api/models/reward.py
+# incentive-engine-api/api/routes/reward.py
 
-from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
+from fastapi import APIRouter, Depends, Header, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from api.config import API_KEY
+from api.db.database import SessionLocal
+from api.models.reward import RewardRequest, RewardResponse
+from api.services.reward_service import process_reward
+
+router = APIRouter(prefix="/reward", tags=["reward"])
 
 
-class RewardRequest(BaseModel):
+async def get_session() -> AsyncSession:
     """
-    Schema for POST /reward requests.
+    Dependency to yield a database session.
     """
-    event: str = Field(..., description="Name of the event triggering the reward")
-    user_id: str = Field(..., description="Unique identifier for the end user")
-    amount: float = Field(..., gt=0, description="Amount of USDC to reward (must be positive)")
-    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Optional extra data")
+    async with SessionLocal() as session:
+        yield session
 
 
-class RewardResponse(BaseModel):
+async def api_key_auth(x_api_key: str = Header(...)):
     """
-    Schema for responses to POST /reward.
+    Validates the X-API-KEY header against the master key.
     """
-    reward_id: int = Field(..., description="Internal ID of the created reward record")
-    balance: float = Field(..., description="The user's updated USDC balance")
-    status: str = Field(..., description="Current status of the reward (e.g., 'pending')")
+    if x_api_key != API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized: invalid API key",
+        )
+
+
+@router.post("/", response_model=RewardResponse)
+async def reward_route(
+    req: RewardRequest,
+    x_api_key: str = Depends(api_key_auth),
+    session: AsyncSession = Depends(get_session),
+):
+    """
+    Handle a reward request: validate auth, call service, return result.
+    """
+    try:
+        return await process_reward(
+            session=session,
+            api_key=x_api_key,
+            event_name=req.event,
+            user_id=req.user_id,
+            amount=req.amount,
+            metadata=req.metadata,
+        )
+    except HTTPException:
+        # propagate HTTPExceptions raised in service (e.g. 401)
+        raise
+    except Exception as e:
+        # catch-all for unexpected errors
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error"
+        )
