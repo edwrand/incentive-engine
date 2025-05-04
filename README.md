@@ -60,26 +60,62 @@ client.reward(
 ## Project Structure
 
 ```
-incentive-engine-sdk/
-├── incentive/                  # Core SDK logic
-│   ├── __init__.py
-│   ├── client.py               # IncentiveClient
-│   ├── config.py               # API config / base URL
-│   ├── exceptions.py           # Custom error classes
-│   └── utils.py                # Payload validation, helpers
+incentive-engine/
+├── incentive-engine-sdk/
+│   ├── incentive/                  # Core SDK logic
+│   │   ├── __init__.py
+│   │   ├── client.py               # IncentiveClient
+│   │   ├── config.py               # API config / base URL
+│   │   ├── exceptions.py           # Custom error classes
+│   │   └── utils.py                # Payload validation, helpers
+│   │
+│   ├── examples/                   # Usage examples
+│   │   └── reward_user.py
+│   │
+│   ├── tests/                      # Unit tests
+│   │   └── test_client.py
+│   │
+│   ├── .env.example                # Example API key config
+│   ├── .gitignore
+│   ├── LICENSE
+│   ├── pyproject.toml              # Package metadata
+│   ├── setup.cfg                   # Linting configs
+│   └── README.md
 │
-├── examples/                   # Usage examples
-│   └── reward_user.py
-│
-├── tests/                      # Unit tests
-│   └── test_client.py
-│
-├── .env.example                # Example API key config
-├── .gitignore
-├── LICENSE
-├── pyproject.toml              # Package metadata
-├── setup.cfg                   # Linting configs
-└── README.md
+└── incentive-engine-api/
+    ├── api/
+    │   ├── __init__.py
+    │   ├── main.py                  # FastAPI app entrypoint
+    │   ├── config.py                # Env var loading
+    │   │
+    │   ├── db/
+    │   │   ├── database.py          # Async engine & session setup
+    │   │   └── models.py            # ORM: DeveloperAccount, Event, Reward, UserBalance
+    │   │
+    │   ├── models/                  # Pydantic schemas
+    │   │   ├── reward.py            # RewardRequest & RewardResponse
+    │   │   └── account.py           # AccountCreateResponse, DepositAddressResponse, BalanceResponse, Withdraw schemas
+    │   │
+    │   ├── routes/                  # HTTP route handlers
+    │   │   ├── reward.py            # POST /reward
+    │   │   └── accounts.py          # POST /accounts, GET deposit_address, GET balance, POST withdraw
+    │   │
+    │   ├── services/                # Business logic
+    │   │   ├── reward_service.py    # process_reward()
+    │   │   └── account_service.py   # create_account(), get_deposit_address(), get_balance(), withdraw()
+    │   │
+    │   └── utils/                   # Helpers
+    │       └── auth.py              # API key validation
+    │
+    ├── tests/                       # API integration tests
+    │   ├── test_reward_route.py
+    │   └── test_account_route.py
+    │
+    ├── .env.example                 # Example environment variables
+    ├── .gitignore
+    ├── Dockerfile
+    ├── pyproject.toml               # API packaging & dependencies
+    └── README.md
 ```
 
 ---
