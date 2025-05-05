@@ -1,274 +1,227 @@
-# Incentive Engine API
+# 🚀 Incentive Engine
 
-A FastAPI service that manages per-developer wallets, records reward events, tracks balances, and executes USDC payouts. Can be self-hosted or used as a SaaS endpoint.
+[![PyPI version](https://img.shields.io/pypi/v/incentive-engine-sdk)](https://pypi.org/project/incentive-engine-sdk/)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/yourname/incentive-engine/ci.yml?branch=main&label=build%20&logo=github)](https://github.com/yourname/incentive-engine/actions)
+[![Codecov](https://img.shields.io/codecov/c/github/yourname/incentive-engine)](https://codecov.io/gh/yourname/incentive-engine)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-## Requirements
+**A complete end-to-end solution for issuing, tracking, and disbursing USDC rewards.**
 
-- Python 3.8+  
-- PostgreSQL (or another supported DB) for production; SQLite is supported for local testing  
-- (Optional) Circle or Fireblocks credentials for real-money rails
+Incentive Engine provides a streamlined way to integrate blockchain-based financial rewards into your application with minimal complexity. Whether you're building a Web3 application, a loyalty program, or implementing user incentives, our system handles the entire lifecycle of USDC payments.
 
-## Installation
+## 💡 Key Features
+
+- **One-line Reward Issuance** - Integrate rewards with a single function call
+- **Isolated Developer Sub-wallets** - Maintain separate balances for different use cases
+- **Automatic Event Logging** - Track all transactions with detailed metadata
+- **Enterprise-ready USDC Integration** - Connect directly with Circle or Fireblocks
+- **Flexible Deployment** - Self-host or use our SaaS offering
+- **Comprehensive Monitoring** - Built-in metrics and health endpoints
+
+## 🏗️ Architecture
+
+Incentive Engine consists of two primary components:
+
+- **Client SDK** (`incentive-engine-sdk/`) – A zero-configuration Python library that enables your application to trigger on-chain payouts with minimal code.
+- **API Service** (`incentive-engine-api/`) – A robust FastAPI backend that manages wallets, events, balances, and USDC transfers.
+
+## 🚦 Getting Started
+
+### Prerequisites
+
+- Python 3.8+
+- PostgreSQL (for production) or SQLite (for local development)
+- Optional: Circle or Fireblocks credentials for live USDC transfers
+- Docker & Docker Compose (recommended for local setup)
+
+### Installation
+
+1. **Clone the repository**
 
 ```bash
 git clone https://github.com/yourname/incentive-engine.git
-cd incentive-engine/incentive-engine-api
+cd incentive-engine
+```
+
+2. **Install the SDK**
+
+```bash
+cd incentive-engine-sdk
+pip install -e .  # Install in development mode
+# OR
+pip install incentive-engine-sdk  # From PyPI
+```
+
+3. **Set up the API Service**
+
+```bash
+cd ../incentive-engine-api
 pip install -e .
-Copy and edit the environment template:
+```
 
-bash
-Copy
-Edit
+### Configuration
+
+Create your environment configuration by copying the example file:
+
+```bash
 cp .env.example .env
-# Edit .env to set your API key, DATABASE_URL, CIRCLE_API_KEY, etc.
-Running Locally
-bash
-Copy
-Edit
-uvicorn api.main:app --host 0.0.0.0 --port 8000
-The database tables will be created automatically on startup.
+```
 
-Configuration
-Set the following environment variables (see .env.example):
+Important configuration values:
 
-text
-Copy
-Edit
-INCENTIVE_API_KEY      # Master API key for all endpoints
-DATABASE_URL           # e.g. postgresql+asyncpg://user:pass@host/db
-CIRCLE_API_KEY         # Custody provider API key (self-hosted or hosted SaaS)
-CIRCLE_WALLET_ID       # Custody provider wallet ID
-API_HOST               # (Optional) default 0.0.0.0
-API_PORT               # (Optional) default 8000
-Endpoints
-Authentication
-All endpoints require X-API-KEY header matching INCENTIVE_API_KEY, except POST /accounts which uses the master key to provision new developer wallets.
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `INCENTIVE_API_KEY` | Master key for API authentication | *Required* |
+| `DATABASE_URL` | Connection string for your database | *Required* |
+| `CIRCLE_API_KEY` | Circle API credentials | Optional |
+| `CIRCLE_WALLET_ID` | Circle wallet identifier | Optional |
+| `API_HOST` | Host to bind the API server | `0.0.0.0` |
+| `API_PORT` | Port for the API server | `8000` |
 
-POST /reward
-Trigger a reward event for a user:
+## 📘 Usage Examples
 
-Request:
+### SDK Quickstart
 
-json
-Copy
-Edit
-{
-  "event": "string",
-  "user_id": "string",
-  "amount": 10.5,
-  "metadata": { "key": "value" }
-}
+```python
+from incentive import IncentiveClient
+
+# Initialize the client
+client = IncentiveClient(
+    api_key="YOUR_API_KEY",
+    host="https://api.yourdomain.com"  # or "http://localhost:8000"
+)
+
+# Issue a reward
+response = client.reward(
+    event="user_signed_up",
+    user_id="user_123",
+    amount=5.00,
+    metadata={"plan": "premium", "source": "referral"}
+)
+
+print(f"Reward ID: {response['reward_id']}")
+print(f"Updated Balance: ${response['balance']}")
+print(f"Status: {response['status']}")
+```
+
+### API Service Quickstart
+
+Start the FastAPI service:
+
+```bash
+uvicorn api.main:app --reload --host ${API_HOST:-0.0.0.0} --port ${API_PORT:-8000}
+```
+
+## 🔌 API Endpoints
+
+All API requests (except account provisioning) require the header:
+```
+X-API-KEY: <your-api-key>
+```
+
+### Core Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/reward` | POST | Issue a new reward to a user |
+| `/accounts` | POST | Create a new developer sub-wallet |
+| `/accounts/{account_id}/deposit_address` | GET | Get your USDC deposit address |
+| `/accounts/{account_id}/balance` | GET | Check current wallet balance |
+| `/accounts/{account_id}/withdraw` | POST | Transfer USDC to an external address |
+
+### Example: Issue a Reward
+
+```bash
+curl -X POST "https://api.yourdomain.com/reward" \
+  -H "X-API-KEY: your-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "event": "content_created",
+    "user_id": "user_abc123",
+    "amount": 10.5,
+    "metadata": {
+      "content_type": "article",
+      "quality_score": 9.2
+    }
+  }'
+```
+
 Response:
 
-json
-Copy
-Edit
+```json
 {
   "reward_id": 123,
   "balance": 10.5,
   "status": "pending"
 }
-POST /accounts
-Provision a new developer sub-wallet:
+```
 
-Headers: X-API-KEY: <master key>
+For full API documentation, visit the OpenAPI schema at `http://<host>:<port>/docs`.
 
-Response:
+## 🗂️ Project Structure
 
-json
-Copy
-Edit
-{
-  "account_id": 1,
-  "wallet_id": "subwallet_abc",
-  "deposit_address": "0x123..."
-}
-GET /accounts/{account_id}/deposit_address
-Retrieve the USDC address to fund your sub-wallet:
+```
+incentive-engine/
+├── incentive-engine-sdk/           # Client SDK
+│   ├── incentive/                  # Core implementation
+│   ├── examples/                   # Usage examples
+│   ├── tests/                      # Unit tests
+│   └── pyproject.toml              # Package definition
+│
+└── incentive-engine-api/           # API Service
+    ├── api/
+    │   ├── main.py                 # Application entry point
+    │   ├── config.py               # Configuration management
+    │   ├── db/                     # Database models & migrations
+    │   ├── models/                 # Pydantic schemas
+    │   ├── routes/                 # API endpoints
+    │   ├── services/               # Business logic
+    │   └── utils/                  # Helper functions
+    ├── tests/                      # Service tests
+    ├── Dockerfile                  # Container definition
+    └── pyproject.toml              # Package definition
+```
 
-Response:
+## 🧪 Testing
 
-json
-Copy
-Edit
-{
-  "deposit_address": "0x123..."
-}
-GET /accounts/{account_id}/balance
-Check the current balance of your sub-wallet:
+Run the test suite for each component:
 
-Response:
+```bash
+# SDK Tests
+cd incentive-engine-sdk
+pip install -e .[dev]
+pytest
 
-json
-Copy
-Edit
-{
-  "balance": 42.0
-}
-POST /accounts/{account_id}/withdraw
-Send USDC from your sub-wallet to an end-user:
+# API Tests
+cd ../incentive-engine-api
+pip install -e .[dev]
+pytest
+```
 
-Request:
+## 💻 Development
 
-json
-Copy
-Edit
-{
-  "user_address": "0xabc...",
-  "amount": 5.0
-}
-Response:
+We welcome contributions! To get started:
 
-json
-Copy
-Edit
-{
-  "tx_hash": "0xdeadbeef...",
-  "status": "submitted"
-}
-Project Structure
-arduino
-Copy
-Edit
-incentive-engine-api/
-├── api/
-│   ├── main.py
-│   ├── config.py
-│   ├── db/
-│   ├── models/
-│   ├── routes/
-│   ├── services/
-│   └── utils/
-├── tests/
-├── .env.example
-├── .gitignore
-├── Dockerfile
-├── pyproject.toml
-└── README.md
-Contributing
-Fork the repo and create a branch (feat/your-feature)
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Install development dependencies (`pip install -e .[dev]`)
+4. Make your changes
+5. Run tests (`pytest`)
+6. Submit a Pull Request
 
-Install dev dependencies: pip install -e .[dev]
+Please see our [Contributing Guidelines](CONTRIBUTING.md) for more details.
 
-Run tests: pytest
+## 📜 License
 
-Open a pull request
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-License
-MIT. See LICENSE for details.
+## 🔗 Resources
 
-Copy
-Edit
-
-
-
-
-
-You said:
-this readme is only for the api. Can you make a readme that include both the api and sdk in the docs
-
-
-ChatGPT said:
-
-Thought for 4 seconds
-markdown
-Copy
-Edit
-# Incentive Engine
-
-This repository contains two related projects:
-
-1. **Client SDK** (`incentive-engine-sdk/`)  
-   A Python package you install in your application to call a single method (`.reward()`) and trigger USDC payouts.
-
-2. **API Service** (`incentive-engine-api/`)  
-   A FastAPI backend that manages per-developer wallets, records reward events, tracks balances, and executes USDC transfers. Can be self-hosted or used as a SaaS endpoint.
+- [SDK Documentation](incentive-engine-sdk/README.md)
+- [API Documentation](incentive-engine-api/README.md)
+- [Example Projects](examples/)
+- [Issue Tracker](https://github.com/yourname/incentive-engine/issues)
 
 ---
 
-## Getting Started
-
-Clone the repository and choose which component to run:
-
-```bash
-git clone https://github.com/yourname/incentive-engine.git
-cd incentive-engine
-SDK
-Change to the SDK folder and install:
-
-bash
-Copy
-Edit
-cd incentive-engine-sdk
-pip install -e .
-Use in your code:
-
-python
-Copy
-Edit
-from incentive import IncentiveClient
-
-client = IncentiveClient(api_key="your_api_key")
-client.reward(event="user_signed_up", user_id="abc123", amount=5)
-For full details see incentive-engine-sdk/README.md.
-
-API
-Change to the API folder and install:
-
-bash
-Copy
-Edit
-cd incentive-engine-api
-pip install -e .
-Copy and edit environment variables:
-
-bash
-Copy
-Edit
-cp .env.example .env
-# set INCENTIVE_API_KEY, DATABASE_URL, CIRCLE_API_KEY, CIRCLE_WALLET_ID, etc.
-Run the service:
-
-bash
-Copy
-Edit
-uvicorn api.main:app --host 0.0.0.0 --port 8000
-For full details see incentive-engine-api/README.md.
-
-Repository Layout
-graphql
-Copy
-Edit
-incentive-engine/
-├── incentive-engine-sdk/    # SDK: Python client library
-│   ├── incentive/           # Core SDK logic
-│   ├── examples/            # Usage examples
-│   ├── tests/               # Unit tests
-│   ├── .env.example
-│   ├── README.md
-│   └── …                    # configs, packaging
-└── incentive-engine-api/    # API: FastAPI service
-    ├── api/                 # App code (routes, models, services, utils)
-    ├── tests/               # Integration tests
-    ├── .env.example
-    ├── Dockerfile
-    ├── pyproject.toml
-    └── README.md
-Contributing
-Fork the repository
-
-Create a branch (feat/your-feature)
-
-Install dependencies and run tests:
-
-bash
-Copy
-Edit
-# SDK
-cd incentive-engine-sdk && pip install -e .[dev] && pytest
-# API
-cd ../incentive-engine-api && pip install -e .[dev] && pytest
-Submit a pull request
-
-License
-This project is released under the MIT License. See the LICENSE files in each folder for details.
+Built with ❤️ by [Your Organization]
