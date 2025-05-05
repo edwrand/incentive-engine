@@ -1,4 +1,4 @@
-# 🚀 Incentive Engine
+# Incentive Engine
 
 [![PyPI version](https://img.shields.io/pypi/v/incentive-engine-sdk)](https://pypi.org/project/incentive-engine-sdk/)
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/yourname/incentive-engine/ci.yml?branch=main&label=build%20&logo=github)](https://github.com/yourname/incentive-engine/actions)
