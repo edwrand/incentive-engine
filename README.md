@@ -5,24 +5,24 @@
 [![Codecov](https://img.shields.io/codecov/c/github/yourname/incentive-engine)](https://codecov.io/gh/yourname/incentive-engine)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**A complete end-to-end solution for issuing, tracking, and disbursing USDC rewards.**
+**A complete solution for issuing, tracking, and disbursing USDC rewards.**
 
-Incentive Engine provides a streamlined way to integrate blockchain-based financial rewards into your application with minimal complexity. Whether you're building a Web3 application, a loyalty program, or implementing user incentives, our system handles the entire lifecycle of USDC payments.
+Incentive Engine provides a streamlined way to integrate blockchain based financial rewards into your application with minimal complexity. Whether you're building a Web3 application, a loyalty program, or implementing user incentives, our system handles the entire lifecycle of USDC payments.
 
 ## 💡 Key Features
 
-- **One-line Reward Issuance** - Integrate rewards with a single function call
-- **Isolated Developer Sub-wallets** - Maintain separate balances for different use cases
+- **One line Reward Issuance** - Integrate rewards with a single function call
+- **Isolated Developer Subwallets** - Maintain separate balances for different use cases
 - **Automatic Event Logging** - Track all transactions with detailed metadata
-- **Enterprise-ready USDC Integration** - Connect directly with Circle or Fireblocks
-- **Flexible Deployment** - Self-host or use our SaaS offering
-- **Comprehensive Monitoring** - Built-in metrics and health endpoints
+- **Enterprise ready USDC Integration** - Connect directly with Circle or Fireblocks
+- **Flexible Deployment** - Self host or use our SaaS offering
+- **Comprehensive Monitoring** - Built in metrics and health endpoints
 
 ## 🏗️ Architecture
 
 Incentive Engine consists of two primary components:
 
-- **Client SDK** (`incentive-engine-sdk/`) – A zero-configuration Python library that enables your application to trigger on-chain payouts with minimal code.
+- **Client SDK** (`incentive-engine-sdk/`) – A zero configuration Python library that enables your application to trigger on-chain payouts with minimal code.
 - **API Service** (`incentive-engine-api/`) – A robust FastAPI backend that manages wallets, events, balances, and USDC transfers.
 
 ## 🚦 Getting Started
