@@ -1,135 +1,274 @@
-# Incentive Engine SDK
+# Incentive Engine API
 
-**Reward your users with programmable USDC, triggered by any in-app behavior—using just 3 lines of code.**
+A FastAPI service that manages per-developer wallets, records reward events, tracks balances, and executes USDC payouts. Can be self-hosted or used as a SaaS endpoint.
 
----
+## Requirements
 
-## What is this?
+- Python 3.8+  
+- PostgreSQL (or another supported DB) for production; SQLite is supported for local testing  
+- (Optional) Circle or Fireblocks credentials for real-money rails
 
-The Incentive Engine SDK lets developers **reward users automatically** when they complete defined events (e.g. signing up, referring someone, completing onboarding). Instead of building a custom payout system or integrating Stripe, PayPal, or crypto wallets, you just:
-
-```python
-client.reward(event="user_signed_up", user_id="abc123", amount=5)
-```
-
-It’s like Stripe—but for programmable incentives.
-
----
-
-## Why Use This?
-
-- ✅ 5-minute integration  
-- 💸 Micro-payouts using **USDC**
-- 🧱 Clean reward ledger (no spreadsheets or hacks)
-- 🔐 Secure & verifiable reward logic
-- 🌍 Borderless + crypto-native payout rail
-
----
-
-## ⚙️ Installation
-
-Coming soon to PyPI, for now:
+## Installation
 
 ```bash
-git clone https://github.com/yourname/incentive-engine-sdk.git
+git clone https://github.com/yourname/incentive-engine.git
+cd incentive-engine/incentive-engine-api
+pip install -e .
+Copy and edit the environment template:
+
+bash
+Copy
+Edit
+cp .env.example .env
+# Edit .env to set your API key, DATABASE_URL, CIRCLE_API_KEY, etc.
+Running Locally
+bash
+Copy
+Edit
+uvicorn api.main:app --host 0.0.0.0 --port 8000
+The database tables will be created automatically on startup.
+
+Configuration
+Set the following environment variables (see .env.example):
+
+text
+Copy
+Edit
+INCENTIVE_API_KEY      # Master API key for all endpoints
+DATABASE_URL           # e.g. postgresql+asyncpg://user:pass@host/db
+CIRCLE_API_KEY         # Custody provider API key (self-hosted or hosted SaaS)
+CIRCLE_WALLET_ID       # Custody provider wallet ID
+API_HOST               # (Optional) default 0.0.0.0
+API_PORT               # (Optional) default 8000
+Endpoints
+Authentication
+All endpoints require X-API-KEY header matching INCENTIVE_API_KEY, except POST /accounts which uses the master key to provision new developer wallets.
+
+POST /reward
+Trigger a reward event for a user:
+
+Request:
+
+json
+Copy
+Edit
+{
+  "event": "string",
+  "user_id": "string",
+  "amount": 10.5,
+  "metadata": { "key": "value" }
+}
+Response:
+
+json
+Copy
+Edit
+{
+  "reward_id": 123,
+  "balance": 10.5,
+  "status": "pending"
+}
+POST /accounts
+Provision a new developer sub-wallet:
+
+Headers: X-API-KEY: <master key>
+
+Response:
+
+json
+Copy
+Edit
+{
+  "account_id": 1,
+  "wallet_id": "subwallet_abc",
+  "deposit_address": "0x123..."
+}
+GET /accounts/{account_id}/deposit_address
+Retrieve the USDC address to fund your sub-wallet:
+
+Response:
+
+json
+Copy
+Edit
+{
+  "deposit_address": "0x123..."
+}
+GET /accounts/{account_id}/balance
+Check the current balance of your sub-wallet:
+
+Response:
+
+json
+Copy
+Edit
+{
+  "balance": 42.0
+}
+POST /accounts/{account_id}/withdraw
+Send USDC from your sub-wallet to an end-user:
+
+Request:
+
+json
+Copy
+Edit
+{
+  "user_address": "0xabc...",
+  "amount": 5.0
+}
+Response:
+
+json
+Copy
+Edit
+{
+  "tx_hash": "0xdeadbeef...",
+  "status": "submitted"
+}
+Project Structure
+arduino
+Copy
+Edit
+incentive-engine-api/
+├── api/
+│   ├── main.py
+│   ├── config.py
+│   ├── db/
+│   ├── models/
+│   ├── routes/
+│   ├── services/
+│   └── utils/
+├── tests/
+├── .env.example
+├── .gitignore
+├── Dockerfile
+├── pyproject.toml
+└── README.md
+Contributing
+Fork the repo and create a branch (feat/your-feature)
+
+Install dev dependencies: pip install -e .[dev]
+
+Run tests: pytest
+
+Open a pull request
+
+License
+MIT. See LICENSE for details.
+
+Copy
+Edit
+
+
+
+
+
+You said:
+this readme is only for the api. Can you make a readme that include both the api and sdk in the docs
+
+
+ChatGPT said:
+
+Thought for 4 seconds
+markdown
+Copy
+Edit
+# Incentive Engine
+
+This repository contains two related projects:
+
+1. **Client SDK** (`incentive-engine-sdk/`)  
+   A Python package you install in your application to call a single method (`.reward()`) and trigger USDC payouts.
+
+2. **API Service** (`incentive-engine-api/`)  
+   A FastAPI backend that manages per-developer wallets, records reward events, tracks balances, and executes USDC transfers. Can be self-hosted or used as a SaaS endpoint.
+
+---
+
+## Getting Started
+
+Clone the repository and choose which component to run:
+
+```bash
+git clone https://github.com/yourname/incentive-engine.git
+cd incentive-engine
+SDK
+Change to the SDK folder and install:
+
+bash
+Copy
+Edit
 cd incentive-engine-sdk
 pip install -e .
-```
+Use in your code:
 
----
-
-## Quick Start
-
-```python
+python
+Copy
+Edit
 from incentive import IncentiveClient
 
-client = IncentiveClient(api_key="your-api-key")
+client = IncentiveClient(api_key="your_api_key")
+client.reward(event="user_signed_up", user_id="abc123", amount=5)
+For full details see incentive-engine-sdk/README.md.
 
-client.reward(
-    event="user_signed_up",
-    user_id="user_abc",
-    amount=5.00,
-    metadata={"campaign": "beta-v1"}
-)
-```
+API
+Change to the API folder and install:
 
-✅ Reward will be logged, balance credited, and available for withdrawal.
+bash
+Copy
+Edit
+cd incentive-engine-api
+pip install -e .
+Copy and edit environment variables:
 
----
+bash
+Copy
+Edit
+cp .env.example .env
+# set INCENTIVE_API_KEY, DATABASE_URL, CIRCLE_API_KEY, CIRCLE_WALLET_ID, etc.
+Run the service:
 
-## Project Structure
+bash
+Copy
+Edit
+uvicorn api.main:app --host 0.0.0.0 --port 8000
+For full details see incentive-engine-api/README.md.
 
-```
-incentive-engine-sdk/
-├── incentive/                  # Core SDK logic
-│   ├── __init__.py
-│   ├── client.py               # IncentiveClient
-│   ├── config.py               # API config / base URL
-│   ├── exceptions.py           # Custom error classes
-│   └── utils.py                # Payload validation, helpers
-│
-├── examples/                   # Usage examples
-│   └── reward_user.py
-│
-├── tests/                      # Unit tests
-│   └── test_client.py
-│
-├── .env.example                # Example API key config
-├── .gitignore
-├── LICENSE
-├── pyproject.toml              # Package metadata
-├── setup.cfg                   # Linting configs
-└── README.md
-```
+Repository Layout
+graphql
+Copy
+Edit
+incentive-engine/
+├── incentive-engine-sdk/    # SDK: Python client library
+│   ├── incentive/           # Core SDK logic
+│   ├── examples/            # Usage examples
+│   ├── tests/               # Unit tests
+│   ├── .env.example
+│   ├── README.md
+│   └── …                    # configs, packaging
+└── incentive-engine-api/    # API: FastAPI service
+    ├── api/                 # App code (routes, models, services, utils)
+    ├── tests/               # Integration tests
+    ├── .env.example
+    ├── Dockerfile
+    ├── pyproject.toml
+    └── README.md
+Contributing
+Fork the repository
 
----
+Create a branch (feat/your-feature)
 
-## Features (v1.0.0)
+Install dependencies and run tests:
 
-- `IncentiveClient(api_key)`
-- `reward(event, user_id, amount, metadata={})`
-- Full type hints + input validation
-- Testable with mocked backend
-- Pytest-based test coverage
+bash
+Copy
+Edit
+# SDK
+cd incentive-engine-sdk && pip install -e .[dev] && pytest
+# API
+cd ../incentive-engine-api && pip install -e .[dev] && pytest
+Submit a pull request
 
-Planned features:
-- `reward_once()` to prevent duplicates
-- Wallet connection + withdrawal
-- Async support (`httpx`)
-- CLI: `incentive-cli trigger event user123 --amount 5`
-
----
-
-## Contributing
-
-I welcome PRs!
-
-1. Fork this repo
-2. Create a new branch (`feature/my-feature`)
-3. Run tests with `pytest`
-4. Submit a pull request with context
-
----
-
-## License
-
-MIT — free to use, modify, and distribute with credit.
-
----
-
-## Support
-
-Open an issue or reach out on [X](https://twitter.com/edwrand)
-
----
-
-## Example Use Cases
-
-- Reward users $5 for signing up  
-- Incentivize feedback submissions  
-- Pay contributors automatically for PRs or content  
-- Build your own USDC-based referral system in minutes
-
----
-
-Built by [@edwrand](https://github.com/edwrand)
+License
+This project is released under the MIT License. See the LICENSE files in each folder for details.

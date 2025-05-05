@@ -1,0 +1,31 @@
+# Byte-compiled / optimized Python files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+env/
+venv/
+ENV/
+.env
+.env.*
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+
+# IDE/editor files
+.vscode/
+.idea/
+*.swp
+
+# Pytest cache
+.pytest_cache/
+
+# Docker
+docker-compose.override.yml
+
+# Logs
+*.log
